@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Real-time credit card fraud detection powered by XGBoost. Submit transaction features and get instant fraud probability scores." />
+    <title>Fraud Shield — Real-Time Credit Card Fraud Detection</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+    <!-- Animated background particles -->
+    <div class="bg-particles" aria-hidden="true">
+        <div class="particle p1"></div>
+        <div class="particle p2"></div>
+        <div class="particle p3"></div>
+        <div class="particle p4"></div>
+        <div class="particle p5"></div>
+    </div>
+
+    <!-- ── Health badge (top-right) ──────────────────────────── -->
+    <div id="health-badge" class="health-badge" title="API Health Status">
+        <span class="health-dot"></span>
+        <span class="health-text">Checking…</span>
+    </div>
+
+    <!-- ── Main container ────────────────────────────────────── -->
+    <main class="container">
+
+        <!-- Hero -->
+        <header class="hero">
+            <div class="hero-icon">
+                <i data-lucide="shield-check"></i>
+            </div>
+            <h1>Fraud<span class="accent">Shield</span></h1>
+            <p class="subtitle">
+                Real-time credit card fraud detection powered by XGBoost.
+                Submit a transaction's features and receive an instant risk assessment.
+            </p>
+        </header>
+
+        <!-- ── Metrics bar ───────────────────────────────────── -->
+        <section id="metrics-bar" class="metrics-bar glass-card">
+            <div class="metric-item">
+                <span class="metric-value" id="metric-total">—</span>
+                <span class="metric-label">Total Scanned</span>
+            </div>
+            <div class="metric-divider"></div>
+            <div class="metric-item">
+                <span class="metric-value" id="metric-fraud">—</span>
+                <span class="metric-label">Fraud Detected</span>
+            </div>
+            <div class="metric-divider"></div>
+            <div class="metric-item">
+                <span class="metric-value" id="metric-rate">—</span>
+                <span class="metric-label">Fraud Rate</span>
+            </div>
+        </section>
+
+        <!-- ── Input section ─────────────────────────────────── -->
+        <section class="input-section">
+            <div class="section-header">
+                <h2><i data-lucide="scan-line"></i> Transaction Data</h2>
+                <div class="mode-toggle">
+                    <button id="btn-quick" class="toggle-btn active" onclick="setMode('quick')">
+                        <i data-lucide="zap"></i> Quick Test
+                    </button>
+                    <button id="btn-advanced" class="toggle-btn" onclick="setMode('advanced')">
+                        <i data-lucide="settings-2"></i> Advanced
+                    </button>
+                </div>
+            </div>
+
+            <!-- Quick mode -->
+            <div id="mode-quick" class="glass-card mode-panel">
+                <p class="mode-desc">
+                    Generate realistic sample transaction data with one click, then hit Analyze.
+                </p>
+                <div class="quick-actions">
+                    <button id="btn-legit" class="sample-btn legit" onclick="loadSample('legit')">
+                        <i data-lucide="check-circle"></i>
+                        <span>Legitimate Sample</span>
+                    </button>
+                    <button id="btn-fraud" class="sample-btn fraud" onclick="loadSample('fraud')">
+                        <i data-lucide="alert-triangle"></i>
+                        <span>Suspicious Sample</span>
+                    </button>
+                    <button id="btn-random" class="sample-btn random" onclick="loadSample('random')">
+                        <i data-lucide="shuffle"></i>
+                        <span>Random Sample</span>
+                    </button>
+                </div>
+                <div id="quick-preview" class="quick-preview hidden">
+                    <div class="preview-header">
+                        <span>Transaction Features Preview</span>
+                        <button class="copy-btn" onclick="copyFeatures()" title="Copy JSON">
+                            <i data-lucide="copy"></i>
+                        </button>
+                    </div>
+                    <pre id="preview-json"></pre>
+                </div>
+            </div>
+
+            <!-- Advanced mode -->
+            <div id="mode-advanced" class="glass-card mode-panel hidden">
+                <p class="mode-desc">
+                    Enter all 29 features manually. V1–V28 are PCA-transformed values; scaled_amount is the transaction amount.
+                </p>
+                <form id="feature-form" class="feature-grid">
+                    <!-- V1 through V28 -->
+                    <div class="field-group" id="pca-fields">
+                        <!-- Generated by JS -->
+                    </div>
+                    <div class="field-group amount-field">
+                        <label for="scaled_amount">scaled_amount</label>
+                        <input type="number" id="scaled_amount" name="scaled_amount"
+                               step="any" placeholder="e.g. 149.62" required />
+                    </div>
+                </form>
+            </div>
+
+            <!-- Analyze button -->
+            <button id="btn-analyze" class="analyze-btn" onclick="analyze()" disabled>
+                <span class="btn-content">
+                    <i data-lucide="search"></i>
+                    <span>Analyze Transaction</span>
+                </span>
+                <span class="btn-loading hidden">
+                    <span class="spinner"></span>
+                    <span>Analyzing…</span>
+                </span>
+            </button>
+        </section>
+
+        <!-- ── Result section ────────────────────────────────── -->
+        <section id="result-section" class="result-section hidden">
+            <div id="result-card" class="result-card glass-card">
+                <!-- Verdict header -->
+                <div id="verdict" class="verdict">
+                    <div class="verdict-icon" id="verdict-icon">
+                        <i data-lucide="shield-check"></i>
+                    </div>
+                    <h3 id="verdict-text">Legitimate</h3>
+                    <p id="verdict-desc" class="verdict-desc">This transaction appears safe.</p>
+                </div>
+
+                <!-- Probability gauge -->
+                <div class="probability-section">
+                    <div class="gauge-container">
+                        <div class="gauge-track">
+                            <div id="gauge-fill" class="gauge-fill" style="width: 0%"></div>
+                            <div id="gauge-threshold" class="gauge-threshold"></div>
+                        </div>
+                        <div class="gauge-labels">
+                            <span>0%</span>
+                            <span>50%</span>
+                            <span>100%</span>
+                        </div>
+                    </div>
+                    <div class="probability-value">
+                        <span class="prob-number" id="prob-value">0.00</span>
+                        <span class="prob-label">Fraud Probability</span>
+                    </div>
+                </div>
+
+                <!-- Risk level -->
+                <div class="risk-section">
+                    <div class="risk-badge" id="risk-badge">
+                        <i data-lucide="gauge"></i>
+                        <span id="risk-text">Low Risk</span>
+                    </div>
+                    <span class="threshold-info" id="threshold-info">
+                        Threshold: 0.70
+                    </span>
+                </div>
+
+                <!-- Response time -->
+                <div class="response-meta">
+                    <span id="response-time">
+                        <i data-lucide="timer"></i> —
+                    </span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>
+                Built with <strong>FastAPI</strong> + <strong>XGBoost</strong>
+                &nbsp;·&nbsp;
+                <a href="/docs" target="_blank" id="docs-link">API Docs</a>
+                &nbsp;·&nbsp;
+                <a href="https://github.com" target="_blank">GitHub</a>
+            </p>
+        </footer>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>

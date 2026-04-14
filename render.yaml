@@ -1,0 +1,28 @@
+# ── Render Blueprint ──────────────────────────────────────────────────────────
+# Define your infrastructure as code to make deployments reproducible.
+# Documentation: https://render.com/docs/blueprint-spec
+
+services:
+  - type: web
+    name: fraud-detection-api
+    runtime: docker
+    plan: free # Change to 'starter' or higher for production traffic
+    
+    # Render will look for Dockerfile in the root by default.
+    # We explicitly point to it to be safe.
+    dockerFilePath: Dockerfile
+    dockerContext: .
+    
+    # Expose the same port as in the Dockerfile EXPOSE command
+    envVars:
+      - key: PORT
+        value: 8000
+      - key: FRAUD_THRESHOLD
+        value: 0.7
+      - key: DEBUG
+        value: false
+      - key: LOG_DB_PATH
+        value: ./logs/predictions.db
+    
+    # Auto-scaling or health checks
+    healthCheckPath: /health
