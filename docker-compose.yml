@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  # The FastAPI Backend
+  api:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: fraud_api
+    ports:
+      - "8000:8000"
+    environment:
+      - FRAUD_THRESHOLD=0.7
+      - DEBUG=true
+      - FRONTEND_URL=http://localhost:3000
+    volumes:
+      - ./logs:/app/logs
+
+  # The Frontend (Served via simple Nginx or Python HTTP)
+  frontend:
+    image: python:3.10-slim
+    container_name: fraud_frontend
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+    command: python -m http.server 3000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
