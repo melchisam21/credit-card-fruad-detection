@@ -7,7 +7,7 @@
 // For local development, use "http://localhost:8000".
 const API_URL = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
     ? "http://localhost:8000"
-    : "https://YOUR-RENDER-APP.onrender.com";   // ← replace after deploying
+    : "https://credit-card-fruad-detection.onrender.com";   // ← replace after deploying
 
 // ── Feature list (must match the backend's features.json) ────────
 const FEATURES = [
