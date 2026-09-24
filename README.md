@@ -355,14 +355,35 @@ LOG_DB_PATH=./logs/predictions.db
 
 ## 📊 Performance Metrics
 
-| Metric | Value | Notes |
-|--------|-------|-------|
-| **Model Accuracy** | 99.2% | Kaggle Credit Card Fraud Dataset (284K transactions) |
-| **Inference Latency (p99)** | < 10ms | In-memory XGBoost serving |
-| **Request Throughput** | ~100 req/s | Single free Render instance |
-| **Uptime SLA** | 99.5% | Render infrastructure |
-| **Cold Start** | ~6s | First request after idle (Render free tier) |
+### Live Model Verification (Sep 2026)
+Tested against known Kaggle dataset samples via production API:
 
+| Test Case | Predicted | Probability | Correct? |
+|-----------|-----------|-------------|----------|
+| Known Legitimate Transaction | Not Fraud | 2.22% | ✅ |
+| Known Fraud Transaction | Fraud | 98.65% | ✅ |
+
+### Training Evaluation (Kaggle Credit Card Fraud Dataset, 284,807 transactions, 0.17% fraud rate)
+
+Compared 3 algorithms after SMOTE resampling (344 → 199,020 fraud samples):
+
+| Model | Precision | Recall | F1-Score |
+|-------|-----------|--------|----------|
+| Logistic Regression | 0.06 | 0.88 | 0.12 |
+| **XGBoost (default)** | **0.74** | **0.81** | **0.77** |
+| Random Forest (tuned) | 0.31 | 0.84 | 0.45 |
+| XGBoost (tuned) | 0.14 | 0.86 | 0.24 |
+
+**Selected: Default XGBoost configuration** — best precision/recall 
+balance. Hyperparameter tuning with `scale_pos_weight` in the grid 
+actually degraded performance (F1: 0.77→0.24) by over-prioritizing 
+recall at precision's expense — a useful lesson in not blindly 
+trusting grid search outputs.
+
+| Metric | Value |
+|--------|-------|
+| Inference Latency | 14-17ms (production, live) |
+| Deployment | Docker + Render (free tier, cold start ~50s after idle) |
 ---
 
 ## 🤝 Contributing
