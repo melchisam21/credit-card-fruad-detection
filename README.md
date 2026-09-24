@@ -14,7 +14,7 @@ Production-grade AI microservice for detecting credit card fraud in real-time. B
 |---------|-----|
 | **API Endpoint** | https://credit-card-fruad-detection.onrender.com |
 | **Interactive API Docs** | https://credit-card-fruad-detection.onrender.com/docs |
-| **Web Dashboard** | https://credit-card-fruad-detection.vercel.app |
+| **Web Dashboard** | https://credit-card-fruad-detection-8tx8.vercel.app |
 
 **Try it now:** Visit the [Web Dashboard](https://credit-card-fruad-detection.vercel.app) → Click "Legitimate Sample" → Hit "Analyze" to see real-time fraud detection in action.
 
